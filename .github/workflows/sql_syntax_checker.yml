@@ -3,10 +3,10 @@ name: DDL Syntax Check
 on:
   push: 
     paths:
-      - '**/sql/*.sql'
+      - './sql/*.sql'
   pull_request: 
     paths:
-      - '**/sql/*.sql'
+      - './sql/*.sql'
   workflow_dispatch:
 
 jobs:
@@ -31,20 +31,7 @@ jobs:
       - name: Find changed SQL files
         id: changed-files
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # PR의 경우 베이스 브랜치와 비교
-            changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep '\.sql$' || echo "")
-          else
-            # Push의 경우 이전 커밋과 비교
-            if [[ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]]; then
-              # 첫 번째 푸시인 경우 모든 SQL 파일 검사
-              changed_files=$(find . -name "*.sql" -path "*/migration*" | tr '\n' ' ')
-            else
-              changed_files=$(git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | grep '\.sql$' || echo "")
-            fi
-          fi
-          
-          echo "changed_files=$changed_files" >> $GITHUB_OUTPUT
+          echo "changed_files=$(git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | grep '\.sql$' || echo "")" >> $GITHUB_OUTPUT
           
           if [ -z "$changed_files" ]; then
             echo "✅ No SQL files changed"
