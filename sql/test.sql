@@ -1,1 +1,1 @@
-create table ABC ();
+create table ABC (asdasd);
