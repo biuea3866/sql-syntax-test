@@ -7,6 +7,7 @@ on:
   pull_request: 
     paths:
       - '**/sql/*.sql'
+  workflow_dispatch:
 
 jobs:
   ddl-syntax-check:
