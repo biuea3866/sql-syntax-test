@@ -2,13 +2,7 @@ name: DDL Syntax Check
 
 on:
   push: 
-    paths:
-      - 'sql/**'
-      - 'sql/*.sql'
   pull_request: 
-    paths:
-      - 'sql/**'
-      - 'sql/*.sql'
 
 jobs:
   ddl-syntax-check:
