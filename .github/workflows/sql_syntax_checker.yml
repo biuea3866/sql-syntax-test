@@ -3,10 +3,10 @@ name: DDL Syntax Check
 on:
   push: 
     paths:
-      - '**/sql/**'
+      - '**/sql/*.sql'
   pull_request: 
     paths:
-      - '**/sql/**'
+      - '**/sql/*.sql'
 
 jobs:
   ddl-syntax-check:
@@ -73,7 +73,7 @@ jobs:
             echo "📄 Checking: $file"
             
             # SQLFluff로 문법 검사만 수행 (parse 명령어 사용)
-            if sqlfluff parse --dialect "$file"; then
+            if sqlfluff parse --dialect mysql "$file"; then
               echo "  ✅ Syntax valid"
             else
               echo "  ❌ Syntax error detected"
