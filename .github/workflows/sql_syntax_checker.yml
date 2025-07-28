@@ -1,0 +1,43 @@
+name: DDL Syntax Check
+
+on:
+  pull_request:
+    paths:
+      - '**/sql/**'
+
+jobs:
+  ddl-syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install SQLFluff
+        run: pip install sqlfluff
+      
+      - name: DDL Syntax Check Only
+        run: |
+          changed_files=$(git diff --name-only origin/main...HEAD | grep '\.sql$' || echo "")
+          
+          if [ -z "$changed_files" ]; then
+            echo "✅ No SQL files changed"
+            exit 0
+          fi
+          
+          for file in $changed_files; do
+            echo "🔍 Checking DDL syntax: $file"
+            
+            # 문법 오류만 체크 (모든 스타일 규칙 제외)
+            sqlfluff parse --dialect $dialect "$file"
+            
+            if [ $? -eq 0 ]; then
+              echo "  ✅ DDL syntax valid"
+            else
+              echo "  ❌ DDL syntax error"
+              exit 1
+            fi
+          done
