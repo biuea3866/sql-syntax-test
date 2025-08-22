@@ -1,0 +1,84 @@
+name: Claude Auto Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+jobs:
+  auto-review:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.issue.pull_request &&
+      (github.event.action == 'opened' || github.event.action == 'ready_for_review')
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Automatic PR Review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          timeout_minutes: "60"
+          direct_prompt: |
+            이 PR에 대한 간단한 요약 리뷰를 제공해주세요.
+
+            1. **PR 개요**: 주요 변경사항을 3-4문장으로 요약
+            2. **주요 포인트**: 중요한 변경사항 2-3개 나열
+            3. **초기 인상**: 전반적인 코드 품질에 대한 간단한 의견
+            
+            📝 **상세한 라인별 리뷰가 필요하시면 `/claude-review` 코멘트를 달아주세요!**
+
+            간결하고 읽기 쉽게 작성해주세요. 한국어로 작성해주세요.
+
+          allowed_tools: "mcp__github__get_pull_request_diff,mcp__github__add_comment_to_pull_request"
+
+  trigger-review:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/claude-review')
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Automatic PR Review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          timeout_minutes: "60"
+          direct_prompt: |
+            Please review this pull request and provide comprehensive feedback.
+            1. **Start a review**: Use `mcp__github__create_pending_pull_request_review` to begin a pending review
+            2. **Get diff information**: Use `mcp__github__get_pull_request_diff` to understand the code changes and line numbers
+            3. **Add inline comments**: Use `mcp__github__add_pull_request_review_comment_to_pending_review` for each specific piece of feedback on particular lines
+            4. **Submit the review**: Use `mcp__github__submit_pending_pull_request_review` with event type "COMMENT" (not "REQUEST_CHANGES") to publish all comments as a non-blocking review
+            Focus on:
+            - Code quality and best practices
+            - Potential bugs or issues
+            - Performance considerations
+            - Security implications
+            - Test coverage
+            - Documentation updates if needed
+            Provide constructive feedback with specific suggestions for improvement.
+            Use inline comments to highlight specific areas of concern.
+            DON'T FORGET THAT YOU HAVE TO USE KOREAN LANGUAGE.
+            
+            ---
+            Additional user instructions:
+            ${{ github.event.comment.body }}
+
+          allowed_tools: "mcp__github__create_pending_pull_request_review,mcp__github__add_comment_to_pending_review,mcp__github__submit_pending_pull_request_review,mcp__github__get_pull_request_diff"
