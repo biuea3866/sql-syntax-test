@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'issue_comment' &&
-      github.event.issue.pull_request && 
+      github.event_name == 'pull_request' && 
       contains(github.event.comment.body, '/claude-review')
     permissions:
       contents: write
@@ -84,17 +84,3 @@ jobs:
             ${{ github.event.comment.body }}
 
           allowed_tools: "mcp__github__create_pending_pull_request_review,mcp__github__add_comment_to_pending_review,mcp__github__submit_pending_pull_request_review,mcp__github__get_pull_request_diff"
-  debug-trigger:
-    runs-on: ubuntu-latest
-    # if 조건 없이 issue_comment 이벤트가 발생하면 무조건 실행되도록 합니다.
-    steps:
-      - name: Check individual conditions
-        run: |
-          echo "--- DEBUGGING WORKFLOW CONDITIONS ---"
-          echo "Is this a PR comment? (github.event.issue.pull_request): ${{ github.event.issue.pull_request != '' }}"
-          echo "Comment Body: ${{ github.event.comment.body }}"
-          echo "Does body contain '/claude-review'? ${{ contains(github.event.comment.body, '/claude-review') }}"
-          echo "-------------------------------------"
-
-      - name: Dump GitHub context for detailed inspection
-        run: echo "${{ toJSON(github.event) }}"
