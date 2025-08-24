@@ -1,0 +1,40 @@
+name: Claude Auto Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+jobs:
+  auto-review:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      (github.event.action == 'opened' || github.event.action == 'ready_for_review') &&
+      github.event.pull_request.draft == false
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Automatic PR Review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          timeout_minutes: "60"
+          direct_prompt: |
+            이 PR에 대한 간단한 요약 리뷰를 제공해주세요.
+
+            1. **PR 개요**: 주요 변경사항을 3-4문장으로 요약
+            2. **주요 포인트**: 중요한 변경사항 2-3개 나열
+            3. **초기 인상**: 전반적인 코드 품질에 대한 간단한 의견
+            
+            📝 **상세한 라인별 리뷰가 필요하시면 `/claude-review` 코멘트를 달아주세요!**
+
+            간결하고 읽기 쉽게 작성해주세요. 한국어로 작성해주세요.
+
+          allowed_tools: "mcp__github__get_pull_request_diff,mcp__github__add_comment_to_pull_request"
