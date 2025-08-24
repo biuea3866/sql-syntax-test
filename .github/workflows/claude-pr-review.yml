@@ -5,16 +5,13 @@ on:
     types: [opened, ready_for_review]
   issue_comment:
     types: [created]
-  pull_request_review_comment:
-    types: [created]
 
 jobs:
   auto-review:
     runs-on: ubuntu-latest
     if: |
       github.event.issue.pull_request &&
-      github.event.action == 'opened' || 
-      github.event.action == 'ready_for_review'
+      (github.event.action == 'opened' || github.event.action == 'ready_for_review')
     permissions:
       contents: read
       pull-requests: write
@@ -46,8 +43,8 @@ jobs:
   trigger-review:
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'issue_comment' && github.event.issue.pull_request) ||
-      github.event_name == 'pull_request_review_comment'
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/claude-review')
     permissions:
       contents: write
       pull-requests: write
